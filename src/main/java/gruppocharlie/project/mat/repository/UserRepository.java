@@ -1,6 +1,6 @@
 package gruppocharlie.project.mat.repository;
 
-import src.main.java.gruppocharlie.project.mat.model.User;
+import gruppocharlie.project.mat.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
