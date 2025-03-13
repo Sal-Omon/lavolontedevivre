@@ -23,7 +23,7 @@ public class SoilData {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private UserData user;
-
+//public soilData
     public SoilData(double temperature, double humidity, LocalDateTime timestamp, UserData user) {
         this.temperature = temperature;
         this.humidity = humidity;

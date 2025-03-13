@@ -19,9 +19,11 @@ public class UserDataService{
     }
 
     //registrazione di un nuovo utente
+
     public UserData registerUser(UserData userData) {
 
         //Ottieni username e password dall'oggetto UserData
+
         String username = userData.getUsername();
         String password = userData.getPassword();
 
@@ -32,7 +34,9 @@ public class UserDataService{
         UserData newUser = new UserData(username,passwordEncoder.encode(password));
         return userDataRepository.save(newUser);
     }
+
     //Trova un utente per username
+
     public Optional<UserData> findByUsername(String username) {
         return userDataRepository.findByUsername(username);
     }

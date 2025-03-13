@@ -51,6 +51,12 @@ public class UserData implements UserDetails {
     }
 
     @Override
+    public String getUsername(){return username;}
+
+    @Override
+    public String getPassword(){return password;}
+
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.emptyList();
     }
