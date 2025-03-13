@@ -20,4 +20,15 @@ public class AirData {
     private double humidity;    // %
 
     private LocalDateTime timestamp;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserData user;
+
+    public AirData(double temperature, double humidity, LocalDateTime timestamp, UserData user) {
+        this.temperature = temperature;
+        this.humidity = humidity;
+        this.timestamp = timestamp;
+        this.user = user;
+    }
 }
