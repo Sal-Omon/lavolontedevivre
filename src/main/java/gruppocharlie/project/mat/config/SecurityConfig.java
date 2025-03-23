@@ -26,13 +26,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())  // Disabilita CSRF
+                .csrf(csrf -> csrf.disable())  // Disabilita CSRF per le API REST
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT è stateless
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll() // Permette l'accesso a /auth/login
-                        .anyRequest().authenticated() // Tutte le altre richieste devono essere autenticate
+                        .requestMatchers(
+                                "/auth/login", "/auth/logout", // ✅ Endpoints pubblici per login/logout
+                                "/Login.html", "/Login_Css.css", "/login.js",
+                                "/images/**", "/favicon.ico", "/mat.js", "/MAT_Css.css"
+                        ).permitAll() // ✅ Tutti possono accedere a questi file
+                        .requestMatchers("/api/**").authenticated() // 🔒 Protegge solo le API
+                        .anyRequest().permitAll() // ✅ Tutto il resto è accessibile
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) // Aggiunge il filtro JWT
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 }

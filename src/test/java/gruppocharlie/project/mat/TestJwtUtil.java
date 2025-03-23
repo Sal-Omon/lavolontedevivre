@@ -21,9 +21,12 @@ class JwtUtilTest {
 
     @BeforeEach
     void setUp() {
-        jwtUtil = new JwtUtil();
+        // ✅ Inizializza la stessa chiave segreta per coerenza
+        String secret = "chiaveSuperSicuraChiaveSuperSicuraChiaveSuperSicura!";
+        secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+
+        jwtUtil = new JwtUtil(secret); // ✅ Passa la chiave segreta
         tokenValido = jwtUtil.generateToken(username);
-        secretKey = Keys.hmacShaKeyFor("chiaveSuperSicuraChiaveSuperSicura".getBytes());
     }
 
     @Test
@@ -40,19 +43,18 @@ class JwtUtilTest {
 
     @Test
     void testTokenValidity() {
-        assertTrue(jwtUtil.isTokenValid(tokenValido, username), "Il token dovrebbe essere valido");
+        assertTrue(jwtUtil.validateToken(tokenValido), "Il token dovrebbe essere valido");
     }
 
     @Test
     void testTokenExpiration() {
-        // Generiamo un token già scaduto
+        // ✅ Generiamo un token già scaduto con la stessa chiave di JwtUtil
         String expiredToken = io.jsonwebtoken.Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis() - 100000)) // 100 secondi fa
                 .setExpiration(new Date(System.currentTimeMillis() - 50000)) // Scaduto 50 secondi fa
                 .signWith(secretKey)
                 .compact();
-
 
         assertTrue(jwtUtil.isTokenExpired(expiredToken), "Il token scaduto dovrebbe essere rilevato come tale");
     }
@@ -60,12 +62,12 @@ class JwtUtilTest {
     @Test
     void testInvalidToken() {
         String invalidToken = "invalid.token.value";
-        assertThrows(MalformedJwtException.class, () -> jwtUtil.extractUsername(invalidToken), "Un token non valido dovrebbe generare un'eccezione");
+        assertFalse(jwtUtil.validateToken(invalidToken), "Un token non valido dovrebbe essere rilevato come non valido");
     }
 
     @Test
     void testExpiredTokenThrowsException() {
-        // Generiamo un token scaduto
+        // ✅ Generiamo un token scaduto con la stessa chiave
         String expiredToken = io.jsonwebtoken.Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis() - 100000)) // 100 secondi fa
@@ -73,6 +75,7 @@ class JwtUtilTest {
                 .signWith(secretKey)
                 .compact();
 
-        assertThrows(ExpiredJwtException.class, () -> jwtUtil.extractUsername(expiredToken), "Un token scaduto dovrebbe lanciare un'eccezione ExpiredJwtException");
+        assertThrows(ExpiredJwtException.class, () -> jwtUtil.extractUsername(expiredToken),
+                "Un token scaduto dovrebbe lanciare un'eccezione ExpiredJwtException");
     }
 }

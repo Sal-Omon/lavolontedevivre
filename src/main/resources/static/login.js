@@ -10,7 +10,8 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
         const response = await fetch("http://localhost:8080/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password }),
+            credentials: "include" // 🔥 Necessario per ricevere i cookie
         });
 
         console.log("Risposta HTTP:", response.status); // Log dello stato HTTP
@@ -20,18 +21,8 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
             throw new Error("Errore: " + response.status + " - " + errorText);
         }
 
-        const data = await response.json();
-
-        if (!data.token) {
-            throw new Error("Nessun token ricevuto!");
-        }
-
-        console.log("Token ricevuto:", data.token);
-
-        localStorage.setItem("jwt", data.token); // ✅ Salva il token
-
-        alert("Login riuscito!");
-        window.location.href = "mat.html"; // ✅ Reindirizza alla pagina protetta
+        console.log("Login riuscito! Redirigo a MAT.html");
+        window.location.href = "MAT.html"; // ✅ Reindirizza alla pagina protetta
 
     } catch (error) {
         console.error("Errore login:", error.message);
