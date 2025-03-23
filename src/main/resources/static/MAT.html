@@ -2,33 +2,59 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewpoint" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="MAT_Css.css">
     <title>MAT</title>
-    <script src="mat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { display: none; } /* Nasconde il corpo fino alla verifica del token */
-        .grafana-container {
-            width: 100vw;
-            height: 50vh;
-            border: none;
-        }
-    </style>
 </head>
 <body>
-<!-- Primo grafico -->
-<iframe
-        src="http://localhost:3000/d-solo/aeg4gblctk16of/test-tretola?orgId=1&timezone=browser&refresh=30s&theme=dark&panelId=1"
-        class="grafana-container">
-</iframe>
+<a id="logoutBtn" href="Login.html">Logout</a>
 
-<!-- Secondo grafico -->
-<iframe src="http://localhost:3000/d-solo/aeg4gblctk16of/test-tretola?orgId=1&from=1739664000000&to=1742256000000&timezone=browser&refresh=1h&panelId=2&__feature.dashboardSceneSolo"
-            class="grafana-container">
-</iframe>
+<div id="divIrlValues">
+    <div id="divSection">
+        <div id="divAir">
+            <h3>
+                &#9729; Aria
+            </h3>
+            <p>Umidità: <span id="spanHumAir"></span> %</p>
+            <p>Temperatura: <span id="spanTempAir"></span>°C</p>
+        </div>
 
-<div class="sun-icon"></div>
-<a href="Login.html" id="logoutBtn">Logout</a>
+        <div id="divGround">
+            <h3>
+                &#9178; Terreno
+            </h3>
+            <p>Umidità: <span id="spanHumGround"></span>%</p>
+            <p>Temperatura: <span id="spanTempGround"></span>°C</p>
+        </div>
+
+        <div id="divLight">
+            <h3>
+                &#9788; Ore di luce
+            </h3>
+            <p>Intensità: <span id="spanLight"></span></p>
+        </div>
+
+        <div id="divWind">
+            <h3>
+                &#x1F32C; Vento
+            </h3>
+            <p>Velocità: <span id="spanWind"></span>Km/h</p>
+        </div>
+    </div>
+</div>
+
+<div id="divChartContainer">
+    <div id="column1">
+        <canvas id="canvasAir"></canvas>
+        <canvas id="canvasGround"></canvas>
+    </div>
+    <div id="column2">
+        <canvas id="canvasLight"></canvas>
+        <canvas id="canvasWind"></canvas>
+    </div>
+</div>
+
+<script src="mat.js"></script>
 </body>
 </html>

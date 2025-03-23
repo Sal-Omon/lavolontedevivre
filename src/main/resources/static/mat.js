@@ -31,60 +31,194 @@ document.addEventListener("DOMContentLoaded", async function () {
         window.location.href = "Login.html";
     });
 
-    // ✅ Funzione per recuperare dati da Grafana API
-    async function fetchGrafanaData() {
-        try {
-            const response = await fetch("http://localhost:3000/api/datasources/proxy/1/query", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer YOUR_GRAFANA_API_TOKEN`
-                }
-            });
+    fetchData();
+    setInterval(fetchData, 2000);
+});
 
-            if (!response.ok) {
-                throw new Error(`Errore HTTP ${response.status}: ${await response.text()}`);
-            }
+const datiTemperaturaAir = [];
+const datiUmiditaAir = [];
+const datiTemperaturaGround = [];
+const datiUmiditaGround = [];
+const datiLight = [];
+const datiWind = [];
 
-            const data = await response.json();
-            console.log("Dati ricevuti da Grafana:", data);
+let graficoAir, graficoGround, graficoLight, graficoWind;
 
-            if (!data.results || data.results.length === 0 || !data.results[0].series || !data.results[0].series[0].values) {
-                throw new Error("Struttura dei dati non valida ricevuta da Grafana");
-            }
+async function fetchData() {
+    try {
+        const response = await fetch('http://localhost:8080/dati');
+        const dati = await response.json();
 
-            return data.results[0].series[0].values;
-        } catch (error) {
-            console.error("Errore nel recupero dati da Grafana:", error);
-            return [];
+        document.getElementById("spanTempAir").textContent = dati.temperaturaAria.toFixed(2);
+        document.getElementById("spanHumAir").textContent = dati.umiditaAria.toFixed(2);
+        document.getElementById("spanTempGround").textContent = dati.temperaturaTerreno.toFixed(2);
+        document.getElementById("spanHumGround").textContent = dati.umiditaTerreno.toFixed(2);
+        document.getElementById("spanLight").textContent = dati.intensitaLuce;
+        document.getElementById("spanWind").textContent = dati.velocitaVento.toFixed(2);
+
+        datiTemperaturaAir.push(dati.temperaturaAria);
+        datiUmiditaAir.push(dati.umiditaAria);
+        datiTemperaturaGround.push(dati.temperaturaTerreno);
+        datiUmiditaGround.push(dati.umiditaTerreno);
+        datiLight.push(dati.intensitaLuce);
+        datiWind.push(dati.velocitaVento);
+
+        if (datiTemperaturaAir.length > 20) {
+            datiTemperaturaAir.shift();
+            datiUmiditaAir.shift();
+            datiTemperaturaGround.shift();
+            datiUmiditaGround.shift();
+            datiLight.shift();
+            datiWind.shift();
         }
+
+        aggiornaGrafici();
+
+    } catch (error) {
+        console.error('Errore nel recupero dei dati:', error);
     }
+}
 
-    // ✅ Funzione per visualizzare il grafico
-    async function renderChart() {
-        const rawData = await fetchGrafanaData();
-        if (rawData.length === 0) {
-            console.warn("Nessun dato disponibile per il grafico.");
-            return;
-        }
+function aggiornaGrafici() {
+    aggiornaGraficoAir();
+    aggiornaGraficoGround();
+    aggiornaGraficoLight();
+    aggiornaGraficoWind();
+}
 
-        const labels = rawData.map(item => new Date(item[0]).toLocaleString());
-        const values = rawData.map(item => item[1]);
+function aggiornaGraficoAir() {
+    const ctx = document.getElementById("canvasAir").getContext("2d");
 
-        const ctx = document.getElementById("grafico").getContext("2d");
-        new Chart(ctx, {
+    if (graficoAir) {
+        graficoAir.data.datasets[0].data = datiTemperaturaAir;
+        graficoAir.data.datasets[1].data = datiUmiditaAir;
+        graficoAir.data.labels = Array.from({ length: datiTemperaturaAir.length }, (_, i) => i + 1);
+        graficoAir.update({ duration: 1, easing: 'linear' });
+    } else {
+        graficoAir = new Chart(ctx, {
             type: "line",
             data: {
-                labels: labels,
-                datasets: [{
-                    label: "Dati Sensore",
-                    data: values,
-                    borderColor: "blue",
-                    fill: false
-                }]
-            }
+                labels: Array.from({ length: datiTemperaturaAir.length }, (_, i) => i + 1),
+                datasets: [
+                    {
+                        label: "Temperatura (°C)",
+                        data: datiTemperaturaAir,
+                        borderColor: "red",
+                        backgroundColor: "rgba(255, 0, 0, 0.3)",
+                        fill: true,
+                    },
+                    {
+                        label: "Umidità (%)",
+                        data: datiUmiditaAir,
+                        borderColor: "blue",
+                        backgroundColor: "rgba(0, 0, 255, 0.3)",
+                        fill: true,
+                    },
+                ],
+            },
+            options: {
+                scales: { x: { display: false }, y: { beginAtZero: true } },
+                animation: { duration: 1 },
+                plugins: { title: { display: true, text: 'Aria', font: { size: 16 } } }
+            },
         });
     }
+}
 
-    renderChart();
-});
+function aggiornaGraficoGround() {
+    const ctx = document.getElementById("canvasGround").getContext("2d");
+
+    if (graficoGround) {
+        graficoGround.data.datasets[0].data = datiTemperaturaGround;
+        graficoGround.data.datasets[1].data = datiUmiditaGround;
+        graficoGround.data.labels = Array.from({ length: datiTemperaturaGround.length }, (_, i) => i + 1);
+        graficoGround.update({ duration: 1, easing: 'linear' });
+    } else {
+        graficoGround = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: Array.from({ length: datiTemperaturaGround.length }, (_, i) => i + 1),
+                datasets: [
+                    {
+                        label: "Temperatura (°C)",
+                        data: datiTemperaturaGround,
+                        borderColor: "green",
+                        backgroundColor: "rgba(0, 255, 0, 0.3)",
+                        fill: true,
+                    },
+                    {
+                        label: "Umidità (%)",
+                        data: datiUmiditaGround,
+                        borderColor: "purple",
+                        backgroundColor: "rgba(128, 0, 128, 0.3)",
+                        fill: true,
+                    },
+                ],
+            },
+            options: {
+                scales: { x: { display: false }, y: { beginAtZero: true } },
+                animation: { duration: 1 },
+                plugins: { title: { display: true, text: 'Terreno', font: { size: 16 } } }
+            },
+        });
+    }
+}
+
+function aggiornaGraficoLight() {
+    const ctx = document.getElementById("canvasLight").getContext("2d");
+
+    if (graficoLight) {
+        graficoLight.data.datasets[0].data = datiLight;
+        graficoLight.data.labels = Array.from({ length: datiLight.length }, (_, i) => i + 1);
+        graficoLight.update({ duration: 1, easing: 'linear' });
+    } else {
+        graficoLight = new Chart(ctx, {
+            type: "line", // Modificato a "line" per il grafico ad area
+            data: {
+                labels: Array.from({ length: datiLight.length }, (_, i) => i + 1),
+                datasets: [{
+                    label: "Intensità Luce",
+                    data: datiLight,
+                    backgroundColor: "rgba(255, 206, 86, 0.3)", // Aggiunto sfondo per l'area
+                    borderColor: "rgba(255, 206, 86, 1)",
+                    fill: true, // Aggiunto fill: true
+                }],
+            },
+            options: {
+                scales: { x: { display: false }, y: { beginAtZero: true } },
+                animation: { duration: 1 },
+                plugins: { title: { display: true, text: 'Luce', font: { size: 16 } } }
+            },
+        });
+    }
+}
+
+function aggiornaGraficoWind() {
+    const ctx = document.getElementById("canvasWind").getContext("2d");
+
+    if (graficoWind) {
+        graficoWind.data.datasets[0].data = datiWind;
+        graficoWind.data.labels = Array.from({ length: datiWind.length }, (_, i) => i + 1);
+        graficoWind.update({ duration: 1, easing: 'linear' });
+    } else {
+        graficoWind = new Chart(ctx, {
+            type: "line", // Modificato a "line" per il grafico ad area
+            data: {
+                labels: Array.from({ length: datiWind.length }, (_, i) => i + 1),
+                datasets: [{
+                    label: "Velocità Vento",
+                    data: datiWind,
+                    backgroundColor: "rgba(75, 192, 192, 0.3)", // Aggiunto sfondo per l'area
+                    borderColor: "rgba(75, 192, 192, 1)",
+                    fill: true, // Aggiunto fill: true
+                }],
+            },
+            options: {
+                scales: { x: { display: false }, y: { beginAtZero: true } },
+                animation: { duration: 1 },
+                plugins: { title: { display: true, text: 'Vento', font: { size: 16 } } }
+            },
+        });
+    }
+}
+

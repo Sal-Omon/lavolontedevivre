@@ -1,123 +1,67 @@
 body {
     background-color: rgba(128, 128, 128, 0.288);
     overflow: hidden;
+    margin: 0;
 }
 
 a {
-    position: absolute;
-    top: 10px; /* Regola la distanza dal bordo superiore */
-    right: 10px; /* Regola la distanza dal bordo destro */
+    position: fixed;
+    top: 10px;
+    right: 10px;
 }
 
-#h1Text {
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    text-align: center;
-}
-
-/*Colonna verticale a sinistra dello schermo*/
-/*#divIrlValues {
-    margin-top: 50px;
-    /*background-color: white;*/
-    /*border: 2px solid #ccc;*/
-    /*padding: 20px;
-    width: 200px;
-    height: 400px;
-    position: relative;
-    border-radius: 10px;
-}*/
-
-/*
-#divIrlValues div { /*Seleziona tutti i <div> all'interno, in questo caso, di divIrlValues
-    display: inline-block;
-    margin-right: 130px; /*Aggiunge spazio tra gli elementi
-    margin-top: 20px;
-    position: relative;
-    left:100px;
-}*/
-
-#divIrlValues div { /*Seleziona tutti i <div> all'interno, in questo caso, di divIrlValues*/
+#divIrlValues div {
     display: block;
     margin-top: 80px;
-
 }
 
 #divSection {
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    position: relative;
+    right: 180px;
+}
 
+#divGround {
+    position: relative;
+    bottom: 20px;
 }
 
 #divLight {
-    position: relative;/*Relative: Per spostare leggermente dalla posizione originale*/
+    position: relative;
     bottom: 37px;
 }
 
 #divWind {
     position: relative;
-    bottom: 37px;
+    bottom: 40px;
 }
 
-/*
-#corniceGrafico {
-    width: 600px;
-    height: 300px;
-    border: 1px solid #ccc;
-    /*Overflow:
-    Controlla cosa succede se il contenuto supera le dimensioni
-    in questo caso nasconde quasiasi contenuto al di fuori del limite perché è stato inserito hidden
-    overflow: hidden;
-    position: relative;
+#divChartContainer {
+    margin-top: 35px;
+    margin-left: 10px;
+    width: 800px; /* Aumentata la larghezza del contenitore */
+    height: 600px; /* Aumentata l'altezza del contenitore */
+    display: flex;
+
+    justify-content: flex-start;
 }
 
-#mioGrafico {
-    width: 100%;
-    height: 100%;
-}*/
-
-/*
-#corniceGrafico {
-    width: 1150px;
-    height: 550px;
-    border: 1px solid #ccc;
-    overflow: hidden;
+#column1, #column2 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 550px; /* Aumentata la larghezza delle colonne */
     position: relative;
-    float: right; /* Posiziona l'elemento a destra 
-    bottom: 600px;
-}*/
-
-#corniceGrafico {
-    width: 1150px;
-    height: 550px;
-    border: none;
-    overflow: hidden;
-    position: relative;
-    float: right; /* Posiziona l'elemento a destra */
-    bottom: 600px;
-    display: grid; /* Usa Grid per il layout */
-    grid-template-columns: repeat(2, 1fr); /* Crea 2 colonne uguali */
-    grid-template-rows: repeat(2, 1fr); /* Crea 2 righe uguali */
+    right: 60px;
 }
 
-#divClasse div{
-    border: none; /* Aggiungi un bordo ai container */
-    display: flex; /* Centra il contenuto */
+#column1 canvas, #column2 canvas {
+    width: 500px; /* Aumentata la larghezza dei canvas */
+    height: 380px; /* Aumentata l'altezza dei canvas */
+}
+
+body {
+    display: flex;
     justify-content: center;
-    align-items: center;
 }
-  
-#mioGrafico {
-    width: 100%;
-    height: 100%;
-}
-
-/*#svgStats {
-    width: 200px; /* Larghezza dell'SVG 
-    height: 100px; /* Altezza dell'SVG 
-    margin: auto; /* Centra l'SVG 
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0
-}*/
-
 
