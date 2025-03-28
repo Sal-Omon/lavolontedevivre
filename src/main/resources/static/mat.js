@@ -1,39 +1,42 @@
 document.addEventListener("DOMContentLoaded", async function () {
+    await checkAuth(); // Verifica l'autenticazione all'avvio
+    initLogout(); // Inizializza il logout
+    fetchData(); // Recupera i dati iniziali
+    setInterval(fetchData, 2000); // Recupera i dati ogni 2 secondi
+});
+
+async function checkAuth() {
     try {
-        // 🔥 Controlla se il server riconosce l'utente autenticato
         const response = await fetch("http://localhost:8080/auth/validate", {
             method: "GET",
-            credentials: "include" // 🔥 Necessario per inviare il cookie al server
+            credentials: "include"
         });
 
         if (!response.ok) {
             throw new Error("Accesso negato. Effettua il login.");
         }
-
         console.log("Utente autenticato con successo");
-
-        // ✅ Mostra il body solo dopo la verifica dell'accesso
-        document.body.style.display = "block";
     } catch (error) {
         alert(error.message);
         window.location.href = "Login.html";
     }
+}
 
-    // ✅ Logout: Distrugge il cookie dal server
+function initLogout() {
     document.getElementById("logoutBtn").addEventListener("click", async function (event) {
         event.preventDefault();
-
-        await fetch("http://localhost:8080/auth/logout", {
-            method: "POST",
-            credentials: "include" // 🔥 Invia il cookie al server per invalidarlo
-        });
-
-        window.location.href = "Login.html";
+        try {
+            await fetch("http://localhost:8080/auth/logout", {
+                method: "POST",
+                credentials: "include"
+            });
+            window.location.href = "Login.html";
+        } catch (error) {
+            console.error("Errore durante il logout:", error);
+            alert("Errore durante il logout. Riprova.");
+        }
     });
-
-    fetchData();
-    setInterval(fetchData, 2000);
-});
+}
 
 const datiTemperaturaAir = [];
 const datiUmiditaAir = [];
@@ -46,36 +49,44 @@ let graficoAir, graficoGround, graficoLight, graficoWind;
 
 async function fetchData() {
     try {
-        const response = await fetch('http://localhost:8080/dati');
-        const dati = await response.json();
-
-        document.getElementById("spanTempAir").textContent = dati.temperaturaAria.toFixed(2);
-        document.getElementById("spanHumAir").textContent = dati.umiditaAria.toFixed(2);
-        document.getElementById("spanTempGround").textContent = dati.temperaturaTerreno.toFixed(2);
-        document.getElementById("spanHumGround").textContent = dati.umiditaTerreno.toFixed(2);
-        document.getElementById("spanLight").textContent = dati.intensitaLuce;
-        document.getElementById("spanWind").textContent = dati.velocitaVento.toFixed(2);
-
-        datiTemperaturaAir.push(dati.temperaturaAria);
-        datiUmiditaAir.push(dati.umiditaAria);
-        datiTemperaturaGround.push(dati.temperaturaTerreno);
-        datiUmiditaGround.push(dati.umiditaTerreno);
-        datiLight.push(dati.intensitaLuce);
-        datiWind.push(dati.velocitaVento);
-
-        if (datiTemperaturaAir.length > 20) {
-            datiTemperaturaAir.shift();
-            datiUmiditaAir.shift();
-            datiTemperaturaGround.shift();
-            datiUmiditaGround.shift();
-            datiLight.shift();
-            datiWind.shift();
+        const response = await fetch('http://localhost:8080/data');
+        if (!response.ok) {
+            throw new Error("Errore nel recupero dei dati.");
         }
-
+        const dati = await response.json();
+        updateSpans(dati);
+        updateDataArrays(dati);
         aggiornaGrafici();
-
     } catch (error) {
         console.error('Errore nel recupero dei dati:', error);
+        alert("Errore nel recupero dei dati. Riprova.");
+    }
+}
+
+function updateSpans(dati) {
+    document.getElementById("spanTempAir").textContent = dati.temperaturaAria.toFixed(2);
+    document.getElementById("spanHumAir").textContent = dati.umiditaAria.toFixed(2);
+    document.getElementById("spanTempGround").textContent = dati.temperaturaTerreno.toFixed(2);
+    document.getElementById("spanHumGround").textContent = dati.umiditaTerreno.toFixed(2);
+    document.getElementById("spanLight").textContent = dati.intensitaLuce;
+    document.getElementById("spanWind").textContent = dati.velocitaVento.toFixed(2);
+}
+
+function updateDataArrays(dati) {
+    datiTemperaturaAir.push(dati.temperaturaAria);
+    datiUmiditaAir.push(dati.umiditaAria);
+    datiTemperaturaGround.push(dati.temperaturaTerreno);
+    datiUmiditaGround.push(dati.umiditaTerreno);
+    datiLight.push(dati.intensitaLuce);
+    datiWind.push(dati.velocitaVento);
+
+    if (datiTemperaturaAir.length > 20) {
+        datiTemperaturaAir.shift();
+        datiUmiditaAir.shift();
+        datiTemperaturaGround.shift();
+        datiUmiditaGround.shift();
+        datiLight.shift();
+        datiWind.shift();
     }
 }
 
@@ -86,139 +97,47 @@ function aggiornaGrafici() {
     aggiornaGraficoWind();
 }
 
-function aggiornaGraficoAir() {
-    const ctx = document.getElementById("canvasAir").getContext("2d");
-
-    if (graficoAir) {
-        graficoAir.data.datasets[0].data = datiTemperaturaAir;
-        graficoAir.data.datasets[1].data = datiUmiditaAir;
-        graficoAir.data.labels = Array.from({ length: datiTemperaturaAir.length }, (_, i) => i + 1);
-        graficoAir.update({ duration: 1, easing: 'linear' });
+function aggiornaGrafico(canvasId, labels, datasets, title) {
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    if (window[canvasId.replace('canvas', 'grafico')]) {
+        window[canvasId.replace('canvas', 'grafico')].data.datasets = datasets;
+        window[canvasId.replace('canvas', 'grafico')].data.labels = labels;
+        window[canvasId.replace('canvas', 'grafico')].update({ duration: 1, easing: 'linear' });
     } else {
-        graficoAir = new Chart(ctx, {
+        window[canvasId.replace('canvas', 'grafico')] = new Chart(ctx, {
             type: "line",
-            data: {
-                labels: Array.from({ length: datiTemperaturaAir.length }, (_, i) => i + 1),
-                datasets: [
-                    {
-                        label: "Temperatura (°C)",
-                        data: datiTemperaturaAir,
-                        borderColor: "red",
-                        backgroundColor: "rgba(255, 0, 0, 0.3)",
-                        fill: true,
-                    },
-                    {
-                        label: "Umidità (%)",
-                        data: datiUmiditaAir,
-                        borderColor: "blue",
-                        backgroundColor: "rgba(0, 0, 255, 0.3)",
-                        fill: true,
-                    },
-                ],
-            },
+            data: { labels, datasets },
             options: {
                 scales: { x: { display: false }, y: { beginAtZero: true } },
                 animation: { duration: 1 },
-                plugins: { title: { display: true, text: 'Aria', font: { size: 16 } } }
+                plugins: { title: { display: true, text: title, font: { size: 16 } } }
             },
         });
     }
+}
+
+function aggiornaGraficoAir() {
+    aggiornaGrafico("canvasAir", Array.from({ length: datiTemperaturaAir.length }, (_, i) => i + 1), [
+        { label: "Temperatura (°C)", data: datiTemperaturaAir, borderColor: "red", backgroundColor: "rgba(255, 0, 0, 0.3)", fill: true },
+        { label: "Umidità (%)", data: datiUmiditaAir, borderColor: "blue", backgroundColor: "rgba(0, 0, 255, 0.3)", fill: true }
+    ], "Aria");
 }
 
 function aggiornaGraficoGround() {
-    const ctx = document.getElementById("canvasGround").getContext("2d");
-
-    if (graficoGround) {
-        graficoGround.data.datasets[0].data = datiTemperaturaGround;
-        graficoGround.data.datasets[1].data = datiUmiditaGround;
-        graficoGround.data.labels = Array.from({ length: datiTemperaturaGround.length }, (_, i) => i + 1);
-        graficoGround.update({ duration: 1, easing: 'linear' });
-    } else {
-        graficoGround = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: Array.from({ length: datiTemperaturaGround.length }, (_, i) => i + 1),
-                datasets: [
-                    {
-                        label: "Temperatura (°C)",
-                        data: datiTemperaturaGround,
-                        borderColor: "green",
-                        backgroundColor: "rgba(0, 255, 0, 0.3)",
-                        fill: true,
-                    },
-                    {
-                        label: "Umidità (%)",
-                        data: datiUmiditaGround,
-                        borderColor: "purple",
-                        backgroundColor: "rgba(128, 0, 128, 0.3)",
-                        fill: true,
-                    },
-                ],
-            },
-            options: {
-                scales: { x: { display: false }, y: { beginAtZero: true } },
-                animation: { duration: 1 },
-                plugins: { title: { display: true, text: 'Terreno', font: { size: 16 } } }
-            },
-        });
-    }
+    aggiornaGrafico("canvasGround", Array.from({ length: datiTemperaturaGround.length }, (_, i) => i + 1), [
+        { label: "Temperatura (°C)", data: datiTemperaturaGround, borderColor: "green", backgroundColor: "rgba(0, 255, 0, 0.3)", fill: true },
+        { label: "Umidità (%)", data: datiUmiditaGround, borderColor: "purple", backgroundColor: "rgba(128, 0, 128, 0.3)", fill: true }
+    ], "Terreno");
 }
 
 function aggiornaGraficoLight() {
-    const ctx = document.getElementById("canvasLight").getContext("2d");
-
-    if (graficoLight) {
-        graficoLight.data.datasets[0].data = datiLight;
-        graficoLight.data.labels = Array.from({ length: datiLight.length }, (_, i) => i + 1);
-        graficoLight.update({ duration: 1, easing: 'linear' });
-    } else {
-        graficoLight = new Chart(ctx, {
-            type: "line", // Modificato a "line" per il grafico ad area
-            data: {
-                labels: Array.from({ length: datiLight.length }, (_, i) => i + 1),
-                datasets: [{
-                    label: "Intensità Luce",
-                    data: datiLight,
-                    backgroundColor: "rgba(255, 206, 86, 0.3)", // Aggiunto sfondo per l'area
-                    borderColor: "rgba(255, 206, 86, 1)",
-                    fill: true, // Aggiunto fill: true
-                }],
-            },
-            options: {
-                scales: { x: { display: false }, y: { beginAtZero: true } },
-                animation: { duration: 1 },
-                plugins: { title: { display: true, text: 'Luce', font: { size: 16 } } }
-            },
-        });
-    }
+    aggiornaGrafico("canvasLight", Array.from({ length: datiLight.length }, (_, i) => i + 1), [
+        { label: "Intensità Luce", data: datiLight, backgroundColor: "rgba(255, 206, 86, 0.3)", borderColor: "rgba(255, 206, 86, 1)", fill: true }
+    ], "Luce");
 }
 
 function aggiornaGraficoWind() {
-    const ctx = document.getElementById("canvasWind").getContext("2d");
-
-    if (graficoWind) {
-        graficoWind.data.datasets[0].data = datiWind;
-        graficoWind.data.labels = Array.from({ length: datiWind.length }, (_, i) => i + 1);
-        graficoWind.update({ duration: 1, easing: 'linear' });
-    } else {
-        graficoWind = new Chart(ctx, {
-            type: "line", // Modificato a "line" per il grafico ad area
-            data: {
-                labels: Array.from({ length: datiWind.length }, (_, i) => i + 1),
-                datasets: [{
-                    label: "Velocità Vento",
-                    data: datiWind,
-                    backgroundColor: "rgba(75, 192, 192, 0.3)", // Aggiunto sfondo per l'area
-                    borderColor: "rgba(75, 192, 192, 1)",
-                    fill: true, // Aggiunto fill: true
-                }],
-            },
-            options: {
-                scales: { x: { display: false }, y: { beginAtZero: true } },
-                animation: { duration: 1 },
-                plugins: { title: { display: true, text: 'Vento', font: { size: 16 } } }
-            },
-        });
-    }
+    aggiornaGrafico("canvasWind", Array.from({ length: datiWind.length }, (_, i) => i + 1), [
+        { label: "Velocità Vento", data: datiWind, backgroundColor: "rgba(75, 192, 192, 0.3)", borderColor: "rgba(75, 192, 192, 1)", fill: true }
+    ], "Vento");
 }
-

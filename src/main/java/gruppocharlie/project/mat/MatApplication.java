@@ -3,11 +3,9 @@ package gruppocharlie.project.mat;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "gruppocharlie.project.mat")
 public class MatApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(MatApplication.class, args);
     }
-
 }
